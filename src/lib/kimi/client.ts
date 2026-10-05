@@ -50,6 +50,7 @@ export async function streamChat(params: {
   temperature?: number;
   reasoning?: "on" | "off";
   maxTokens?: number;
+  signal?: AbortSignal;
 }): Promise<{ stream: ReadableStream<Uint8Array>; getFullText: () => string }> {
   const { apiKey, baseUrl } = getConfig();
   if (!apiKey) {
@@ -59,16 +60,22 @@ export async function streamChat(params: {
     );
   }
 
+  // OpenRouter-only fields; providers like Moonshot direct reject them.
+  const isOpenRouter = baseUrl.includes("openrouter.ai");
+
   const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: buildHeaders(apiKey),
+    signal: params.signal,
     body: JSON.stringify({
       model: params.model,
       messages: params.messages,
       temperature: params.temperature ?? 0.6,
       stream: true,
-      provider: { sort: "throughput" },
-      ...(params.reasoning === "on" ? {} : { reasoning: { enabled: false } }),
+      ...(isOpenRouter ? { provider: { sort: "throughput" } } : {}),
+      ...(isOpenRouter && params.reasoning !== "on"
+        ? { reasoning: { enabled: false } }
+        : {}),
       ...(params.maxTokens ? { max_tokens: params.maxTokens } : {}),
     }),
   });
@@ -91,9 +98,11 @@ export async function streamChat(params: {
   let buffer = "";
 
   const source = res.body;
+  let sourceReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const reader = source.getReader();
+      sourceReader = reader;
       try {
         while (true) {
           const { done, value } = await reader.read();
@@ -128,6 +137,10 @@ export async function streamChat(params: {
       }
       controller.close();
     },
+    async cancel(reason) {
+      // Propagate cancellation upstream so the provider stops generating.
+      if (sourceReader) await sourceReader.cancel(reason).catch(() => {});
+    },
   });
 
   return { stream, getFullText: () => fullText };
@@ -139,6 +152,8 @@ export async function completeChat(params: {
   messages: ChatMessage[];
   temperature?: number;
   reasoning?: "on" | "off";
+  maxTokens?: number;
+  signal?: AbortSignal;
 }): Promise<string> {
   const { apiKey, baseUrl } = getConfig();
   if (!apiKey) {
@@ -148,16 +163,22 @@ export async function completeChat(params: {
     );
   }
 
+  const isOpenRouter = baseUrl.includes("openrouter.ai");
+
   const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: buildHeaders(apiKey),
+    signal: params.signal,
     body: JSON.stringify({
       model: params.model,
       messages: params.messages,
       temperature: params.temperature ?? 0.6,
       stream: false,
-      provider: { sort: "throughput" },
-      ...(params.reasoning === "on" ? {} : { reasoning: { enabled: false } }),
+      ...(isOpenRouter ? { provider: { sort: "throughput" } } : {}),
+      ...(isOpenRouter && params.reasoning !== "on"
+        ? { reasoning: { enabled: false } }
+        : {}),
+      ...(params.maxTokens ? { max_tokens: params.maxTokens } : {}),
     }),
   });
 

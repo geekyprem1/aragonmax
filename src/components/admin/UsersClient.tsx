@@ -138,18 +138,9 @@ function CreateUser({
   );
 }
 
-function UserRow({
-  user,
-  plans,
-  api,
-}: {
-  user: Profile;
-  plans: Plan[];
-  api: (method: string, body?: unknown, qs?: string) => Promise<boolean>;
-}) {
-  const [addWords, setAddWords] = useState("");
-  const [showEnt, setShowEnt] = useState(false);
-  const [ent, setEnt] = useState({
+/** Editable entitlement snapshot for the Features panel. */
+function entFromUser(user: Profile) {
+  return {
     is_unlimited: user.is_unlimited,
     template_level: user.template_level,
     feature_pro: user.feature_pro,
@@ -164,7 +155,29 @@ function UserRow({
     is_vip: user.is_vip,
     image_credits: user.image_credits,
     video_credits: user.video_credits,
-  });
+  };
+}
+
+function UserRow({
+  user,
+  plans,
+  api,
+}: {
+  user: Profile;
+  plans: Plan[];
+  api: (method: string, body?: unknown, qs?: string) => Promise<boolean>;
+}) {
+  const [addWords, setAddWords] = useState("");
+  const [showEnt, setShowEnt] = useState(false);
+  const [ent, setEnt] = useState(() => entFromUser(user));
+  const [prevUser, setPrevUser] = useState(user);
+
+  // Re-sync with fresh props after router.refresh() so a stale snapshot can
+  // never be written back (reverting plan presets or restoring spent credits).
+  if (user !== prevUser) {
+    setPrevUser(user);
+    setEnt(entFromUser(user));
+  }
 
   const entFlags: { key: keyof typeof ent; label: string }[] = [
     { key: "is_unlimited", label: "Unlimited" },
@@ -192,13 +205,21 @@ function UserRow({
       <td className="px-4 py-3">
         <select
           value={user.plan_id ?? ""}
-          onChange={(e) =>
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value === (user.plan_id ?? "")) return;
+            if (
+              !confirm(
+                "Applying a plan overwrites this user's entitlements (stacked OTOs will be removed) and resets words to the plan amount. Continue?"
+              )
+            )
+              return;
             api("PATCH", {
               id: user.id,
-              plan_id: e.target.value || null,
-              apply_plan: !!e.target.value,
-            })
-          }
+              plan_id: value || null,
+              apply_plan: !!value,
+            });
+          }}
           className="rounded border bg-surface-2 px-2 py-1 text-xs outline-none"
         >
           <option value="">—</option>
@@ -355,7 +376,16 @@ function UserRow({
             </label>
             <button
               onClick={async () => {
-                const ok = await api("PATCH", { id: user.id, entitlements: ent });
+                // Only send fields that actually changed vs. fresh props.
+                const changed: Record<string, boolean | number> = {};
+                for (const key of Object.keys(ent) as (keyof typeof ent)[]) {
+                  if (ent[key] !== user[key]) changed[key] = ent[key];
+                }
+                if (Object.keys(changed).length === 0) {
+                  setShowEnt(false);
+                  return;
+                }
+                const ok = await api("PATCH", { id: user.id, entitlements: changed });
                 if (ok) setShowEnt(false);
               }}
               className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white hover:bg-primary-hover"

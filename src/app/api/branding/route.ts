@@ -15,7 +15,7 @@ const schema = z.object({
     .nullable()
     .optional()
     .or(z.literal("")),
-  custom_domain: z.string().nullable().optional().or(z.literal("")),
+  custom_domain: z.string().max(253).nullable().optional().or(z.literal("")),
 });
 
 export async function POST(req: Request) {
@@ -31,13 +31,29 @@ export async function POST(req: Request) {
       { status: 400 }
     );
 
+  // Domains are stored normalized (lowercase, no scheme) so the login page can
+  // match them against the Host header exactly, with one owner per domain.
+  const rawDomain = (parsed.data.custom_domain ?? "").trim().toLowerCase();
+  const customDomain = rawDomain || null;
+  if (
+    customDomain &&
+    !/^(?=.{4,253}$)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(
+      customDomain
+    )
+  ) {
+    return NextResponse.json(
+      { error: "Enter a valid domain like app.yourbrand.com" },
+      { status: 400 }
+    );
+  }
+
   const admin = createAdminClient();
   const { error } = await admin.from("branding").upsert({
     owner_id: profile.id,
     app_name: parsed.data.app_name || null,
     logo_url: parsed.data.logo_url || null,
     primary_color: parsed.data.primary_color || null,
-    custom_domain: parsed.data.custom_domain || null,
+    custom_domain: customDomain,
     updated_at: new Date().toISOString(),
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

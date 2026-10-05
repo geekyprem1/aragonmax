@@ -93,7 +93,13 @@ export async function isModelActive(modelKey: string): Promise<boolean> {
 /** Resolve a selection key to the REAL provider model id sent to the API. */
 export async function resolveModel(modelKey: string): Promise<string> {
   const entry = parseModels().find((m) => m.key === modelKey);
-  return entry?.real || fallbackReal();
+  // Documented contract: real override → KIMI_BACKEND_MODEL → key itself.
+  return (
+    entry?.real ||
+    process.env.KIMI_BACKEND_MODEL?.trim() ||
+    entry?.key ||
+    fallbackReal()
+  );
 }
 
 /** Real backend model for the default selection (used by Writer/Code). */

@@ -1,17 +1,28 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { preCheckCredits, chargeWords, creditError } from "@/lib/credits";
+import {
+  preCheckCredits,
+  reserveWords,
+  settleWords,
+  creditError,
+} from "@/lib/credits";
+import { chargedStream } from "@/lib/chargedStream";
+import { readJsonBody } from "@/lib/readJson";
 import { getBackendModel, isModelActive, resolveModel } from "@/lib/kimi/models";
 import { getIdentityPrompt } from "@/lib/identity";
 import { streamChat, KimiError, type ChatMessage } from "@/lib/kimi/client";
 
 export const runtime = "nodejs";
 
+// Upper bound of one streamed answer; also the up-front reservation.
+// Reasoning tokens count towards this budget too.
+const MAX_OUTPUT_WORDS = 8192;
+
 const schema = z.object({
-  prompt: z.string().min(1),
-  language: z.string().optional(),
-  model: z.string().optional(),
+  prompt: z.string().min(1).max(20_000),
+  language: z.string().max(50).optional(),
+  model: z.string().max(100).optional(),
 });
 
 export async function POST(req: Request) {
@@ -21,7 +32,7 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const parsed = schema.safeParse(await req.json().catch(() => null));
+  const parsed = schema.safeParse(await readJsonBody(req));
   if (!parsed.success)
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
@@ -51,28 +62,33 @@ export async function POST(req: Request) {
     },
   ];
 
+  const reservation = await reserveWords({
+    userId: user.id,
+    amount: MAX_OUTPUT_WORDS,
+    unlimited: check.profile?.is_unlimited,
+  });
+  if (!reservation.ok) {
+    const { status, error } = creditError("empty");
+    return NextResponse.json({ error }, { status });
+  }
+
   try {
-    const { stream, getFullText } = await streamChat({ model, messages, reasoning: "on" });
-    const reader = stream.getReader();
-    const charged = new ReadableStream<Uint8Array>({
-      async pull(controller) {
-        const { done, value } = await reader.read();
-        if (done) {
-          controller.close();
-          const output = getFullText();
-          if (output) {
-            await chargeWords({
-              userId: user.id,
-              outputText: output,
-              module: "code",
-              model,
-              unlimited: check.profile?.is_unlimited,
-            });
-          }
-          return;
-        }
-        controller.enqueue(value);
-      },
+    const { stream, getFullText } = await streamChat({
+      model,
+      messages,
+      reasoning: "on",
+      maxTokens: MAX_OUTPUT_WORDS,
+      signal: req.signal,
+    });
+
+    const charged = chargedStream({
+      stream,
+      getFullText,
+      userId: user.id,
+      module: "code",
+      model,
+      unlimited: check.profile?.is_unlimited,
+      reserved: reservation.reserved,
     });
 
     return new Response(charged, {
@@ -82,6 +98,14 @@ export async function POST(req: Request) {
       },
     });
   } catch (err) {
+    await settleWords({
+      userId: user.id,
+      reserved: reservation.reserved,
+      outputText: "",
+      module: "code",
+      model,
+      unlimited: check.profile?.is_unlimited,
+    });
     const status = err instanceof KimiError ? err.status : 500;
     const message = err instanceof KimiError ? err.message : "Something went wrong";
     return NextResponse.json({ error: message }, { status });

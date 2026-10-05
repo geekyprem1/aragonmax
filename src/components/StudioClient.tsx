@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ImageIcon,
@@ -13,7 +13,8 @@ import {
 
 type Tab = "image" | "video";
 
-const IMAGE_RATIOS = ["1:1", "4:3", "3:4", "3:2", "2:3", "16:9", "9:16", "auto"];
+// Ratios supported by openai/gpt-image-2.
+const IMAGE_RATIOS = ["1:1", "3:2", "2:3"];
 const VIDEO_RATIOS = ["16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "1:1"];
 
 interface GenItem {
@@ -21,14 +22,29 @@ interface GenItem {
   type: Tab;
 }
 
+interface PendingJob {
+  id: string;
+  type: Tab;
+  prompt: string | null;
+  ratio: string | null;
+}
+
+interface JobParams {
+  type: Tab;
+  prompt: string;
+  ratio: string;
+}
+
 export default function StudioClient({
   imageCredits,
   videoCredits,
   initialGenerations,
+  pendingJobs = [],
 }: {
   imageCredits: number;
   videoCredits: number;
   initialGenerations: GenItem[];
+  pendingJobs?: PendingJob[];
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("image");
@@ -50,7 +66,7 @@ export default function StudioClient({
     setRatio(t === "image" ? "1:1" : "16:9");
   }
 
-  async function pollAndSave(predId: string): Promise<void> {
+  async function pollAndSave(predId: string, job: JobParams): Promise<void> {
     for (let i = 0; i < 150; i++) {
       await new Promise((r) => setTimeout(r, 2500));
       const res = await fetch(`/api/media/status?id=${predId}`);
@@ -61,29 +77,53 @@ export default function StudioClient({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             predictionId: predId,
-            type: tab,
-            prompt,
-            aspectRatio: ratio,
+            type: job.type,
+            prompt: job.prompt,
+            aspectRatio: job.ratio,
           }),
         });
         const saved = await saveRes.json();
         if (saveRes.ok && saved.genId) {
           setResult(`/api/media/file?gen=${saved.genId}`);
-          setResultType(tab);
-          setGallery((g) => [{ id: saved.genId, type: tab }, ...g]);
+          setResultType(job.type);
+          setGallery((g) => [{ id: saved.genId, type: job.type }, ...g]);
         } else {
           setError(saved.error || "Could not save the result. Please try again.");
         }
         return;
       }
       if (data.status === "failed" || data.status === "canceled") {
-        setError(data.error || "Generation failed.");
+        setError(data.error || "Generation failed. The credit was refunded.");
         return;
       }
       setStatus(data.status || "processing");
     }
-    setError("Timed out. Please try again.");
+    setError("Timed out — refresh later; it will resume automatically.");
   }
+
+  // Resume jobs that were still running when the page was last unloaded.
+  useEffect(() => {
+    if (!pendingJobs.length) return;
+    let cancelled = false;
+    (async () => {
+      for (const job of pendingJobs) {
+        if (cancelled) return;
+        try {
+          await pollAndSave(job.id, {
+            type: job.type,
+            prompt: job.prompt ?? "",
+            ratio: job.ratio ?? (job.type === "image" ? "1:1" : "16:9"),
+          });
+        } catch {
+          // Network hiccup — keep going with the remaining jobs.
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function generate() {
     if (!prompt.trim() || loading) return;
@@ -111,7 +151,7 @@ export default function StudioClient({
         if (tab === "image") setImgLeft(data.remaining);
         else setVidLeft(data.remaining);
       }
-      await pollAndSave(data.id);
+      await pollAndSave(data.id, { type: tab, prompt, ratio });
     } catch {
       setError("Network error");
     } finally {

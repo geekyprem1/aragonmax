@@ -74,7 +74,13 @@ function typeFromKey(key: string): BuildType {
 /** Pull raw code out of markdown code fences; fall back to the whole text. */
 function extractCode(md: string): string {
   const blocks = [...md.matchAll(/```[\w-]*\n?([\s\S]*?)```/g)].map((m) => m[1]);
-  if (blocks.length) return blocks.join("\n\n").trim();
+  if (blocks.length) {
+    // Multiple blocks: use the largest (the single-file project), not a join.
+    return blocks.reduce((a, b) => (b.length > a.length ? b : a)).trim();
+  }
+  // Truncated output: a fenced block with no closing fence — take the rest.
+  const open = md.match(/```[\w-]*\n([\s\S]*)$/);
+  if (open) return open[1].trim();
   return md.trim();
 }
 
@@ -386,7 +392,7 @@ export default function BuildClient({
                 value={idea}
                 onChange={(e) => setIdea(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
+                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                     e.preventDefault();
                     build();
                   }
@@ -439,6 +445,7 @@ function BuildResult({
   idea: string;
 }) {
   const [showCode, setShowCode] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   function download() {
     const content = extractCode(code);
@@ -449,15 +456,6 @@ function BuildResult({
     a.download = `${slugify(idea)}.${type.ext}`;
     a.click();
     URL.revokeObjectURL(url);
-  }
-
-  function preview() {
-    const content = extractCode(code);
-    const blob = new Blob([content], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-    // Revoke a bit later so the new tab can load it.
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
   }
 
   return (
@@ -472,7 +470,7 @@ function BuildResult({
           ⬇ Download Project
         </button>
         <button
-          onClick={preview}
+          onClick={() => setShowPreview(true)}
           className="text-xs text-primary hover:underline"
         >
           Live preview
@@ -488,6 +486,29 @@ function BuildResult({
         <pre className="mt-3 max-h-96 overflow-auto rounded-lg bg-surface-2 p-3 text-xs scrollbar-thin">
           <code>{extractCode(code)}</code>
         </pre>
+      )}
+      {showPreview && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="Generated preview">
+          <div className="mb-2 flex items-center justify-between gap-3 text-sm text-white">
+            <span className="min-w-0 truncate">
+              Live preview · sandboxed (scripts run isolated from your account)
+            </span>
+            <button
+              onClick={() => setShowPreview(false)}
+              className="shrink-0 rounded-lg border border-white/30 px-3 py-1.5 text-xs hover:bg-white/10"
+            >
+              Close
+            </button>
+          </div>
+          {/* No allow-same-origin: generated scripts run in an opaque origin
+              and cannot read app cookies, storage or the parent DOM. */}
+          <iframe
+            title="Generated preview"
+            sandbox="allow-scripts allow-forms allow-popups allow-modals"
+            srcDoc={extractCode(code)}
+            className="h-full w-full flex-1 rounded-xl border bg-white"
+          />
+        </div>
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import type { Profile } from "@/types/db";
 import type { Session } from "@supabase/supabase-js";
 
@@ -42,9 +43,19 @@ export async function requireUser(): Promise<Profile | null> {
   return getProfile();
 }
 
-/** Returns profile only if admin, else null. */
+/** Returns profile only if admin and active, else null. */
 export async function requireAdmin(): Promise<Profile | null> {
   const profile = await getProfile();
-  if (!profile || profile.role !== "admin") return null;
+  if (!profile || profile.status !== "active" || profile.role !== "admin") return null;
   return profile;
+}
+
+/**
+ * Admin guard for pages that read service-role data. Runs on every request
+ * (layouts don't re-render on client-side navigation, so each page checks).
+ */
+export async function requireAdminPage(): Promise<Profile> {
+  const admin = await requireAdmin();
+  if (!admin) redirect("/dashboard");
+  return admin;
 }

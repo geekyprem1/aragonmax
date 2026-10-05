@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import type { Template, TemplateCategory } from "@/types/db";
+import type { TemplateCatalogItem, TemplateCategory } from "@/types/db";
 
 const categories: { key: TemplateCategory | "all"; label: string }[] = [
   { key: "all", label: "All" },
@@ -50,7 +50,7 @@ export default function TemplatesClient({
   templateLevel,
   upgradeUrl,
 }: {
-  templates: Template[];
+  templates: TemplateCatalogItem[];
   favoriteIds: string[];
   userId: string;
   templateLevel: number;

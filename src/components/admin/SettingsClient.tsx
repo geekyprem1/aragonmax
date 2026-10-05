@@ -7,6 +7,7 @@ import type { AiModel } from "@/types/db";
 export default function SettingsClient({
   identityPrompt,
   upgradeUrl,
+  dailyCap,
   models,
   defaultModel,
   baseUrl,
@@ -14,6 +15,7 @@ export default function SettingsClient({
 }: {
   identityPrompt: string;
   upgradeUrl: string;
+  dailyCap: string;
   models: AiModel[];
   defaultModel: string;
   baseUrl: string;
@@ -22,6 +24,7 @@ export default function SettingsClient({
   const router = useRouter();
   const [identity, setIdentity] = useState(identityPrompt);
   const [upgrade, setUpgrade] = useState(upgradeUrl);
+  const [cap, setCap] = useState(dailyCap);
   const [msg, setMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -32,7 +35,11 @@ export default function SettingsClient({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        settings: { brand_identity_prompt: identity, upgrade_url: upgrade },
+        settings: {
+          brand_identity_prompt: identity,
+          upgrade_url: upgrade,
+          daily_word_cap: cap.trim(),
+        },
       }),
     });
     setSaving(false);
@@ -71,6 +78,21 @@ export default function SettingsClient({
             value={upgrade}
             onChange={(e) => setUpgrade(e.target.value)}
             placeholder="https://your-sales-page.com/upgrades"
+            className="w-full rounded-lg border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-primary"
+          />
+        </div>
+
+        <div className="mt-4">
+          <h2 className="mb-1 font-medium">Daily word cap</h2>
+          <p className="mb-2 text-xs text-muted">
+            Fair-use cap for unlimited plans (words per day, UTC). 0 = no cap.
+            Default: 200000.
+          </p>
+          <input
+            value={cap}
+            onChange={(e) => setCap(e.target.value)}
+            placeholder="200000"
+            inputMode="numeric"
             className="w-full rounded-lg border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-primary"
           />
         </div>

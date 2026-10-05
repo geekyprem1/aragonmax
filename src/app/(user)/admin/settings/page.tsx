@@ -1,13 +1,15 @@
+import { requireAdminPage } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveModels, getDefaultModel } from "@/lib/kimi/models";
 import SettingsClient from "@/components/admin/SettingsClient";
 
 export default async function AdminSettingsPage() {
+  await requireAdminPage();
   const admin = createAdminClient();
   const { data: settingsRows } = await admin
     .from("settings")
     .select("key, value")
-    .in("key", ["brand_identity_prompt", "upgrade_url"]);
+    .in("key", ["brand_identity_prompt", "upgrade_url", "daily_word_cap"]);
   const settingsMap = Object.fromEntries(
     (settingsRows ?? []).map((s) => [s.key, s.value ?? ""])
   );
@@ -24,6 +26,7 @@ export default async function AdminSettingsPage() {
     <SettingsClient
       identityPrompt={settingsMap["brand_identity_prompt"] ?? ""}
       upgradeUrl={settingsMap["upgrade_url"] ?? ""}
+      dailyCap={settingsMap["daily_word_cap"] ?? ""}
       models={models}
       defaultModel={defaultModel}
       baseUrl={baseUrl}

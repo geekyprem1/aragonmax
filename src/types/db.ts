@@ -83,6 +83,12 @@ export interface Template {
   created_at: string;
 }
 
+/** Catalog metadata only (no system_prompt) — safe for the client. */
+export type TemplateCatalogItem = Pick<
+  Template,
+  "id" | "name" | "description" | "category" | "icon" | "tier"
+>;
+
 export interface Conversation {
   id: string;
   user_id: string;

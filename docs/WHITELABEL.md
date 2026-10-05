@@ -20,7 +20,8 @@ This is a single shared deployment, so a custom domain points to the same app:
    (e.g. `app.theirbrand.com`).
 2. The buyer adds a DNS record at their registrar as Vercel instructs
    (usually a CNAME to `cname.vercel-dns.com`).
-3. Once verified, the app loads on their domain with their branding.
+3. Once verified, the login page resolves branding from the Host header, and
+   signed-in accounts see their own branding. Domains are unique per customer.
 
 > For fully separate whitelabel instances (their own database + deployment),
 > duplicate the deploy with their own Supabase project and env vars. That is a

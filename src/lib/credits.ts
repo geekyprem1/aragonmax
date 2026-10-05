@@ -27,14 +27,12 @@ export function creditError(reason?: CreditCheck["reason"]): {
 /** Words used by this user since midnight UTC (for the fair-use cap). */
 async function wordsUsedToday(userId: string): Promise<number> {
   const admin = createAdminClient();
-  const since = new Date();
-  since.setUTCHours(0, 0, 0, 0);
-  const { data } = await admin
-    .from("usage_logs")
-    .select("words_used")
-    .eq("user_id", userId)
-    .gte("created_at", since.toISOString());
-  return (data ?? []).reduce((s, r) => s + Number(r.words_used), 0);
+  const { data, error } = await admin.rpc("words_used_today", { p_user: userId });
+  if (error) {
+    console.error("words_used_today failed:", error.message);
+    return 0;
+  }
+  return Number(data ?? 0);
 }
 
 /** Pre-flight: user active + has words (or unlimited within daily cap). */
@@ -52,7 +50,9 @@ export async function preCheckCredits(userId: string): Promise<CreditCheck> {
 
   // Unlimited plans: no balance limit, but enforce a daily fair-use cap.
   if (profile.is_unlimited) {
-    const cap = Number((await getSetting("daily_word_cap")) || "200000");
+    const raw = await getSetting("daily_word_cap");
+    const parsed = raw === null || raw.trim() === "" ? 200000 : Number(raw);
+    const cap = Number.isFinite(parsed) ? parsed : 200000;
     if (cap > 0) {
       const used = await wordsUsedToday(userId);
       if (used >= cap) return { ok: false, reason: "daily", profile };
@@ -64,40 +64,78 @@ export async function preCheckCredits(userId: string): Promise<CreditCheck> {
   return { ok: true, profile };
 }
 
+export type Reservation =
+  | { ok: true; reserved: number; remaining: number }
+  | { ok: false };
+
 /**
- * Charge the user for generated output. Atomic decrement + usage log.
- * Returns words charged and remaining balance.
+ * Atomically reserves up to `amount` words before a generation starts, so
+ * parallel requests can't spend the same balance. Partial reservations are
+ * allowed; the unused part is refunded by settleWords.
  */
-export async function chargeWords(params: {
+export async function reserveWords(params: {
   userId: string;
+  amount: number;
+  unlimited?: boolean;
+}): Promise<Reservation> {
+  if (params.unlimited) return { ok: true, reserved: 0, remaining: -1 };
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc("reserve_words", {
+    p_user: params.userId,
+    p_amount: Math.max(1, Math.round(params.amount)),
+  });
+  if (error) {
+    console.error("reserve_words failed:", error.message);
+    throw new Error("Credit system unavailable");
+  }
+  if (data === null || data === undefined) return { ok: false };
+  const row = data as { reserved: number; remaining: number };
+  return {
+    ok: true,
+    reserved: Number(row.reserved),
+    remaining: Number(row.remaining),
+  };
+}
+
+/**
+ * Settles usage after a generation (or cancellation/error): charges the
+ * actual words and refunds whatever the reservation did not use. Never
+ * throws — billing failures are logged and reported as `remaining: null`.
+ */
+export async function settleWords(params: {
+  userId: string;
+  reserved: number;
   outputText: string;
   module: AiModule;
   model: string;
   unlimited?: boolean;
-}): Promise<{ words: number; remaining: number }> {
+}): Promise<{ words: number; remaining: number | null }> {
   const words = countWords(params.outputText);
   const admin = createAdminClient();
 
-  let remaining = -1; // -1 signals unlimited (no deduction)
+  let remaining: number | null = null;
   if (!params.unlimited) {
-    const { data } = await admin.rpc("decrement_words", {
+    const { data, error } = await admin.rpc("settle_words", {
       p_user: params.userId,
-      p_words: words,
+      p_reserved: params.reserved,
+      p_actual: words,
     });
-    remaining = Number(data ?? 0);
+    if (error) console.error("settle_words failed:", error.message);
+    else remaining = Number(data ?? 0);
   }
 
-  // Always log usage (for analytics), even on unlimited plans.
-  await admin.from("usage_logs").insert({
-    user_id: params.userId,
-    module: params.module,
-    words_used: words,
-    model: params.model,
-  });
+  if (words > 0) {
+    const { error } = await admin.from("usage_logs").insert({
+      user_id: params.userId,
+      module: params.module,
+      words_used: words,
+      model: params.model,
+    });
+    if (error) console.error("usage_logs insert failed:", error.message);
+  }
 
   return { words, remaining };
 }
-
 
 export type MediaKind = "image" | "video";
 
@@ -127,14 +165,38 @@ export async function preCheckMedia(
   return { ok: true, profile };
 }
 
-/** Deduct one media credit (image or video). Returns remaining. */
-export async function chargeMediaCredit(
+/**
+ * Atomically reserves one media credit before submitting a paid provider
+ * job. `ok: false` means the balance was insufficient.
+ */
+export async function reserveMediaCredit(
   userId: string,
   kind: MediaKind
-): Promise<number> {
+): Promise<{ ok: boolean; remaining: number }> {
   const admin = createAdminClient();
-  const fn =
-    kind === "image" ? "decrement_image_credits" : "decrement_video_credits";
-  const { data } = await admin.rpc(fn, { p_user: userId, p_n: 1 });
-  return Number(data ?? 0);
+  const { data, error } = await admin.rpc("reserve_media_credits", {
+    p_user: userId,
+    p_kind: kind,
+    p_n: 1,
+  });
+  if (error) {
+    console.error("reserve_media_credits failed:", error.message);
+    throw new Error("Credit system unavailable");
+  }
+  if (data === null || data === undefined) return { ok: false, remaining: 0 };
+  return { ok: true, remaining: Number(data) };
+}
+
+/** Refunds a reserved media credit (failed submission or terminal failure). */
+export async function refundMediaCredit(
+  userId: string,
+  kind: MediaKind
+): Promise<void> {
+  const admin = createAdminClient();
+  const { error } = await admin.rpc("refund_media_credits", {
+    p_user: userId,
+    p_kind: kind,
+    p_n: 1,
+  });
+  if (error) console.error("refund_media_credits failed:", error.message);
 }

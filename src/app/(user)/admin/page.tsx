@@ -1,17 +1,17 @@
+import { requireAdminPage } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function AdminOverview() {
+  await requireAdminPage();
   const admin = createAdminClient();
-  const [{ count: userCount }, { data: usage }] = await Promise.all([
+  const [{ count: userCount }, { data: totalWords }] = await Promise.all([
     admin.from("profiles").select("*", { count: "exact", head: true }),
-    admin.from("usage_logs").select("words_used"),
+    admin.rpc("total_words_used"),
   ]);
-
-  const totalWords = (usage ?? []).reduce((s, r) => s + Number(r.words_used), 0);
 
   const stats = [
     { label: "Total users", value: userCount ?? 0 },
-    { label: "Words used (all time)", value: totalWords.toLocaleString() },
+    { label: "Words used (all time)", value: Number(totalWords ?? 0).toLocaleString() },
   ];
 
   return (

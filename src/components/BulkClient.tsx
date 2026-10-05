@@ -18,6 +18,7 @@ export default function BulkClient() {
   const [itemsText, setItemsText] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -35,15 +36,30 @@ export default function BulkClient() {
     setError(null);
     setLoading(true);
     setResults([]);
+    setProgress(0);
+
+    // One item per request: results appear as they finish, and a timeout or
+    // failure never loses the items that already completed.
+    const collected: Result[] = [];
     try {
-      const res = await fetch("/api/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ instruction, items }),
-      });
-      const data = await res.json();
-      if (data.results) setResults(data.results);
-      if (!res.ok) setError(data.error ?? "Request failed");
+      for (let i = 0; i < items.length; i++) {
+        const res = await fetch("/api/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ instruction, items: [items[i]] }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setError(data.error ?? "Request failed");
+          break;
+        }
+        const result = (data.results ?? [])[0];
+        if (result) {
+          collected.push(result);
+          setResults([...collected]);
+        }
+        setProgress(i + 1);
+      }
     } catch {
       setError("Network error");
     } finally {
@@ -140,7 +156,7 @@ export default function BulkClient() {
           style={{ backgroundImage: "linear-gradient(135deg,#2f6bff,#22d3ee)" }}
         >
           <Sparkles size={16} />
-          {loading ? `Generating ${items.length}…` : "Generate all"}
+          {loading ? `Generating ${progress}/${items.length}…` : "Generate all"}
         </button>
         {results.length > 0 && (
           <>
@@ -170,7 +186,7 @@ export default function BulkClient() {
       {loading && (
         <div className="mt-6 flex items-center gap-2 rounded-xl border bg-surface/70 px-4 py-3 text-sm text-muted backdrop-blur">
           <span className="thinking-spark">✦</span>
-          Generating {items.length} items… this can take a bit.
+          Generating {progress}/{items.length} items… results appear as they finish.
         </div>
       )}
 

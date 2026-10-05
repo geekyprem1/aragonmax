@@ -55,7 +55,13 @@ export async function createPrediction(
   return json as Prediction;
 }
 
+const PREDICTION_ID_RE = /^[a-zA-Z0-9]+$/;
+
 export async function getPrediction(id: string): Promise<Prediction> {
+  // Ids must be a single path segment (no traversal, no extra slashes).
+  if (!PREDICTION_ID_RE.test(id)) {
+    throw new ReplicateError("Invalid prediction id.", 400);
+  }
   const res = await fetch(`${BASE}/predictions/${id}`, {
     headers: { Authorization: `Bearer ${token()}` },
   });

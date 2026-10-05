@@ -3,12 +3,14 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { getEntitlements } from "@/lib/entitlements";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { readJsonBody } from "@/lib/readJson";
+import { deleteUserMediaFiles } from "@/lib/mediaCleanup";
 
 export const runtime = "nodejs";
 
 const createSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().email().max(200),
+  password: z.string().min(6).max(200),
   words: z.number().int().min(0).optional(),
   mode: z.enum(["agency", "team"]),
 });
@@ -17,11 +19,23 @@ function capFor(mode: "agency" | "team", ent: ReturnType<typeof getEntitlements>
   return mode === "agency" ? ent.agency_accounts : Math.max(ent.seats - 1, 0);
 }
 
+interface ChildResult {
+  ok: boolean;
+  error?: "limit" | "words" | "parent";
+  available?: number;
+  allocated?: number;
+}
+
 export async function POST(req: Request) {
   const owner = await requireUser();
   if (!owner) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (owner.status !== "active")
+    return NextResponse.json(
+      { error: "Your account is disabled. Contact the administrator." },
+      { status: 403 }
+    );
 
-  const parsed = createSchema.safeParse(await req.json().catch(() => null));
+  const parsed = createSchema.safeParse(await readJsonBody(req));
   if (!parsed.success)
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
@@ -34,20 +48,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Team seats upgrade required." }, { status: 402 });
 
   const admin = createAdminClient();
-
-  // Enforce cap.
-  const { count } = await admin
-    .from("profiles")
-    .select("id", { count: "exact", head: true })
-    .eq("parent_id", owner.id)
-    .eq("member_type", mode);
-
   const cap = capFor(mode, ent);
-  if ((count ?? 0) >= cap)
-    return NextResponse.json(
-      { error: `Limit reached (${cap} ${mode} accounts).` },
-      { status: 400 }
-    );
 
   const { data: created, error } = await admin.auth.admin.createUser({
     email,
@@ -60,29 +61,52 @@ export async function POST(req: Request) {
       { status: 400 }
     );
 
-  const { error: profileErr } = await admin.from("profiles").insert({
-    id: created.user.id,
-    email,
-    role: "user",
-    parent_id: owner.id,
-    member_type: mode,
-    words_remaining: words ?? 10000,
-    status: "active",
-    // Team members inherit the owner's Pro/Bulk access; agency clients do not.
-    feature_pro: mode === "team" ? ent.feature_pro : false,
-    feature_bulk: mode === "team" ? ent.feature_bulk : false,
+  // Cap + word-pool transfer happen atomically in the DB under a parent lock.
+  const { data: result, error: rpcErr } = await admin.rpc("create_agency_child", {
+    p_parent: owner.id,
+    p_child: created.user.id,
+    p_email: email,
+    p_mode: mode,
+    p_cap: cap,
+    p_words: words ?? null,
+    p_feature_pro: mode === "team" ? ent.feature_pro : false,
+    p_feature_bulk: mode === "team" ? ent.feature_bulk : false,
   });
-  if (profileErr) {
+
+  const child = result as ChildResult | null;
+  if (rpcErr || !child?.ok) {
     await admin.auth.admin.deleteUser(created.user.id);
-    return NextResponse.json({ error: profileErr.message }, { status: 400 });
+    if (child?.error === "limit")
+      return NextResponse.json(
+        { error: `Limit reached (${cap} ${mode} accounts).` },
+        { status: 400 }
+      );
+    if (child?.error === "words")
+      return NextResponse.json(
+        {
+          error: `Not enough words in your pool. You have ${Number(
+            child.available ?? 0
+          ).toLocaleString()} words available.`,
+        },
+        { status: 400 }
+      );
+    return NextResponse.json(
+      { error: rpcErr?.message ?? "Could not create account" },
+      { status: 400 }
+    );
   }
 
-  return NextResponse.json({ id: created.user.id });
+  return NextResponse.json({ id: created.user.id, words: child.allocated ?? 0 });
 }
 
 export async function DELETE(req: Request) {
   const owner = await requireUser();
   if (!owner) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (owner.status !== "active")
+    return NextResponse.json(
+      { error: "Your account is disabled. Contact the administrator." },
+      { status: 403 }
+    );
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
@@ -98,6 +122,7 @@ export async function DELETE(req: Request) {
   if (!child || child.parent_id !== owner.id)
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
 
+  await deleteUserMediaFiles(id);
   const { error } = await admin.auth.admin.deleteUser(id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });

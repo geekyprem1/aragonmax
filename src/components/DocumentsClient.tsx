@@ -9,6 +9,8 @@ interface Msg {
   content: string;
 }
 
+const MAX_CONTEXT_CHARS = 40000;
+
 export default function DocumentsClient() {
   const router = useRouter();
   const [docText, setDocText] = useState("");
@@ -43,6 +45,11 @@ export default function DocumentsClient() {
       text = text.trim();
       if (!text) {
         setError("Could not read any text from this file (is it scanned/image-only?).");
+        setDocText("");
+      } else if (text.length > MAX_CONTEXT_CHARS) {
+        setError(
+          `Document is too long (${text.length.toLocaleString()} characters). Please use a file under ${MAX_CONTEXT_CHARS.toLocaleString()} characters, or split it into smaller files.`
+        );
         setDocText("");
       } else {
         setDocText(text);
@@ -115,6 +122,12 @@ export default function DocumentsClient() {
       }
     } catch {
       setError("Network error");
+      // Drop the empty assistant placeholder so it never enters the history.
+      setMessages((m) =>
+        m.length && m[m.length - 1].role === "assistant" && !m[m.length - 1].content
+          ? m.slice(0, -1)
+          : m
+      );
     } finally {
       setLoading(false);
       router.refresh();
@@ -204,7 +217,7 @@ export default function DocumentsClient() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
                 ask();
               }

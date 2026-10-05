@@ -34,18 +34,34 @@ export default async function StudioPage() {
   }
 
   const supabase = await createClient();
-  const { data: gens } = await supabase
-    .from("generations")
-    .select("id, type")
-    .eq("user_id", profile.id)
-    .order("created_at", { ascending: false })
-    .limit(60);
+  const [{ data: gens }, { data: pending }] = await Promise.all([
+    supabase
+      .from("generations")
+      .select("id, type")
+      .eq("user_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(60),
+    // Jobs submitted earlier that haven't finished (e.g. page was refreshed).
+    supabase
+      .from("media_jobs")
+      .select("prediction_id, type, prompt, aspect_ratio")
+      .eq("user_id", profile.id)
+      .in("status", ["starting", "processing"])
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
 
   return (
     <StudioClient
       imageCredits={profile.image_credits ?? 0}
       videoCredits={profile.video_credits ?? 0}
       initialGenerations={(gens as Pick<Generation, "id" | "type">[]) ?? []}
+      pendingJobs={(pending ?? []).map((p) => ({
+        id: p.prediction_id,
+        type: p.type as "image" | "video",
+        prompt: p.prompt,
+        ratio: p.aspect_ratio,
+      }))}
     />
   );
 }

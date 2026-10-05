@@ -49,7 +49,7 @@ async function readChatStream(
 export default function ChatClient({
   models,
   defaultModel,
-  systemPrompt,
+  templateId,
   personaName,
   userId,
   initialConversations,
@@ -57,7 +57,7 @@ export default function ChatClient({
 }: {
   models: AiModel[];
   defaultModel: string;
-  systemPrompt?: string;
+  templateId?: string;
   personaName?: string;
   userId: string;
   initialConversations: Conversation[];
@@ -80,6 +80,8 @@ export default function ChatClient({
   const [showList, setShowList] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // Monotonic id so stale conversation loads can't overwrite newer ones.
+  const loadSeqRef = useRef(0);
 
   function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -105,6 +107,7 @@ export default function ChatClient({
 
   function newChat() {
     if (loading) return;
+    loadSeqRef.current++;
     setInput("");
     setImage(null);
     setActiveId(null);
@@ -115,6 +118,7 @@ export default function ChatClient({
 
   async function openConversation(id: string) {
     if (loading) return;
+    const seq = ++loadSeqRef.current;
     setActiveId(id);
     setError(null);
     setLoadingConvo(true);
@@ -123,6 +127,8 @@ export default function ChatClient({
       .select("role, content")
       .eq("conversation_id", id)
       .order("created_at", { ascending: true });
+    // A newer load started while this one was in flight — drop these results.
+    if (seq !== loadSeqRef.current) return;
     setMessages((data as Msg[]) ?? []);
     setLoadingConvo(false);
     setShowList(false);
@@ -139,7 +145,7 @@ export default function ChatClient({
 
   async function send() {
     const text = input.trim();
-    if ((!text && !image) || loading) return;
+    if ((!text && !image) || loading || loadingConvo) return;
     setError(null);
 
     const sentImage = image;
@@ -148,7 +154,10 @@ export default function ChatClient({
       content: sentImage ? `${text}\n[📎 image attached]` : text,
     };
     // Only the last 15 messages go to the API (long chats stay fast/cheap).
-    const apiMessages: Msg[] = [...messages.slice(-15), userMsg];
+    let apiMessages: Msg[] = [...messages.slice(-15), userMsg];
+    // Providers expect the history to start with a user message.
+    const firstUser = apiMessages.findIndex((m) => m.role === "user");
+    if (firstUser > 0) apiMessages = apiMessages.slice(firstUser);
     setMessages([...messages, userMsg, { role: "assistant", content: "" }]);
     setInput("");
     setImage(null);
@@ -190,7 +199,7 @@ export default function ChatClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model,
-          systemPrompt,
+          templateId,
           messages: apiMessages,
           image: sentImage ?? undefined,
         }),
@@ -235,6 +244,14 @@ export default function ChatClient({
       }
     } catch {
       setError("Network error");
+      // Drop the empty assistant placeholder so it never enters the history.
+      setMessages((m) =>
+        m.length &&
+        m[m.length - 1].role === "assistant" &&
+        !m[m.length - 1].content
+          ? m.slice(0, -1)
+          : m
+      );
     } finally {
       setLoading(false);
       window.setTimeout(() => router.refresh(), 1500);
@@ -323,7 +340,7 @@ export default function ChatClient({
             <div className="os-composer">
               {pro && <label className="os-attachment" title="Attach image (Pro)"><Paperclip size={19} /><input type="file" aria-label="Attach image" accept="image/*" onChange={handleImage} className="sr-only" /></label>}
               <textarea ref={inputRef} aria-label="Message" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} rows={1} placeholder="What's on your mind?" className="max-h-40 min-w-0 flex-1 resize-none bg-transparent px-2 py-3 text-sm outline-none" />
-              <button onClick={send} disabled={loading || (!input.trim() && !image)} className="os-send" aria-label="Send message"><ArrowUp size={21} /></button>
+              <button onClick={send} disabled={loading || loadingConvo || (!input.trim() && !image)} className="os-send" aria-label="Send message"><ArrowUp size={21} /></button>
             </div>
             <div className="os-composer-caption"><span>ArgonMax AI can make mistakes. Check important info.</span><span className="hidden sm:block">↵ Send <span className="ml-3">⇧ ↵ New line</span></span></div>
           </div>

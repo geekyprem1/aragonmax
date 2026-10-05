@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { pickEntitlements } from "@/lib/entitlements";
+import { deleteUserMediaFiles } from "@/lib/mediaCleanup";
 
 export const runtime = "nodejs";
 
@@ -141,31 +142,66 @@ export async function PATCH(req: Request) {
   }
 
   if (add_words !== undefined) {
-    const { data: current } = await admin
-      .from("profiles")
-      .select("words_remaining")
-      .eq("id", id)
-      .single();
-    update.words_remaining = Math.max(
-      (current?.words_remaining ?? 0) + add_words,
-      0
-    );
+    const { error: addErr } = await admin.rpc("add_words", {
+      p_user: id,
+      p_amount: add_words,
+    });
+    if (addErr)
+      return NextResponse.json({ error: addErr.message }, { status: 400 });
   }
 
   const { error } = await admin.from("profiles").update(update).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // Disabling a parent also disables its child accounts.
+  if (status === "disabled") {
+    await admin
+      .from("profiles")
+      .update({ status: "disabled" })
+      .eq("parent_id", id);
+  }
+
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: Request) {
-  if (!(await requireAdmin()))
+  const adminProfile = await requireAdmin();
+  if (!adminProfile)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
+  if (id === adminProfile.id)
+    return NextResponse.json(
+      { error: "You cannot delete your own account." },
+      { status: 400 }
+    );
+
   const admin = createAdminClient();
+
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, role")
+    .eq("id", id)
+    .maybeSingle();
+  if (!target)
+    return NextResponse.json({ error: "User not found" }, { status: 400 });
+
+  if (target.role === "admin") {
+    const { count } = await admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin");
+    if ((count ?? 0) <= 1)
+      return NextResponse.json(
+        { error: "Cannot delete the last admin account." },
+        { status: 400 }
+      );
+  }
+
+  await deleteUserMediaFiles(id);
   const { error } = await admin.auth.admin.deleteUser(id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true });

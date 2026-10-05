@@ -117,15 +117,26 @@ export async function streamChat(params: {
             if (!trimmed.startsWith("data:")) continue;
             const payload = trimmed.slice(5).trim();
             if (payload === "[DONE]") continue;
+            let json: unknown = null;
             try {
-              const json = JSON.parse(payload);
-              const delta: string = json.choices?.[0]?.delta?.content ?? "";
-              if (delta) {
-                fullText += delta;
-                controller.enqueue(encoder.encode(delta));
-              }
+              json = JSON.parse(payload);
             } catch {
               // ignore malformed partial JSON
+              continue;
+            }
+            const frame = json as {
+              error?: { message?: string };
+              choices?: { delta?: { content?: string } }[];
+            };
+            if (frame.error) {
+              // Provider-side failure mid-stream: surface it instead of
+              // silently treating the partial output as complete.
+              throw new Error(frame.error.message || "AI stream failed");
+            }
+            const delta: string = frame.choices?.[0]?.delta?.content ?? "";
+            if (delta) {
+              fullText += delta;
+              controller.enqueue(encoder.encode(delta));
             }
           }
         }

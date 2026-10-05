@@ -15,9 +15,10 @@ import { streamChat, KimiError, type ChatMessage } from "@/lib/kimi/client";
 
 export const runtime = "nodejs";
 
-// Upper bound of one streamed answer; also the up-front reservation.
-// Reasoning tokens count towards this budget too.
-const MAX_OUTPUT_WORDS = 8192;
+// Billing reservation for one build: this many words are reserved up front
+// and the actual usage settles afterwards. Output itself is intentionally
+// UNCAPPED — plans are token/word-based, so long builds are billed, not cut.
+const RESERVE_WORDS = 24576;
 
 const schema = z.object({
   prompt: z.string().min(1).max(20_000),
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
 
   const reservation = await reserveWords({
     userId: user.id,
-    amount: MAX_OUTPUT_WORDS,
+    amount: RESERVE_WORDS,
     unlimited: check.profile?.is_unlimited,
   });
   if (!reservation.ok) {
@@ -77,7 +78,6 @@ export async function POST(req: Request) {
       model,
       messages,
       reasoning: "on",
-      maxTokens: MAX_OUTPUT_WORDS,
       signal: req.signal,
     });
 

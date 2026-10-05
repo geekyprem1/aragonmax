@@ -84,6 +84,19 @@ function extractCode(md: string): string {
   return md.trim();
 }
 
+/**
+ * Sandboxed previews run in an opaque origin where localStorage/sessionStorage
+ * access throws — which crashes many generated games on startup. Inject an
+ * in-memory shim before any page script runs.
+ */
+function withPreviewShim(html: string): string {
+  const shim =
+    "<script>(function(){try{window.localStorage.getItem('_t')}catch(e){var d={};var m={getItem:function(k){return d[k]!=null?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}}};try{Object.defineProperty(m,'length',{get:function(){return Object.keys(d).length}})}catch(_){}try{Object.defineProperty(window,'localStorage',{value:m,configurable:true})}catch(_){}try{Object.defineProperty(window,'sessionStorage',{value:m,configurable:true})}catch(_){}}})();<\/script>";
+  if (/<head[^>]*>/i.test(html))
+    return html.replace(/<head[^>]*>/i, (match) => match + shim);
+  return shim + html;
+}
+
 function slugify(s: string): string {
   return (
     s
@@ -505,7 +518,7 @@ function BuildResult({
           <iframe
             title="Generated preview"
             sandbox="allow-scripts allow-forms allow-popups allow-modals"
-            srcDoc={extractCode(code)}
+            srcDoc={withPreviewShim(extractCode(code))}
             className="h-full w-full flex-1 rounded-xl border bg-white"
           />
         </div>

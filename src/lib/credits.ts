@@ -15,7 +15,10 @@ export function creditError(reason?: CreditCheck["reason"]): {
   error: string;
 } {
   if (reason === "empty")
-    return { status: 402, error: "You have run out of words. Please upgrade your plan." };
+    return {
+      status: 402,
+      error: "You have run out of words. Please top up your balance or upgrade your plan.",
+    };
   if (reason === "daily")
     return {
       status: 429,

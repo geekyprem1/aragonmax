@@ -16,8 +16,8 @@
 |---|-------|-------|------------------|
 | FE | ArgonMax Commercial | $17 | All-in-one ArgonMax K3 AI app |
 | Bump | Template Mega Pack | $9.95 | +30 bonus templates at checkout |
-| OTO1 | Unlimited | $37 | Remove all word limits |
-| OTO2 | Pro / Advanced AI | $47 | PDF chat, vision, long context |
+| OTO1 | Unlimited Pro | $47 | Unlimited words + advanced AI (PDF chat, vision, long context) |
+| OTO2 | Creative PRO (Gold) | $87 | AI image + video creation (Gold tier) |
 | OTO3 | DFY Pack | $67 | 100+ premium templates + campaigns |
 | OTO4 | Automation / Bulk | $39 | Generate in bulk, save hours |
 | OTO5 | Traffic / Leads | $47 | Traffic + lead-gen system |
@@ -29,6 +29,21 @@
 | Bundle | Everything Bundle | $247-297 | FE + all OTOs, big saving |
 
 **Downsell rule:** every OTO gets a lite/cheaper version if the buyer clicks "No".
+
+**Downsell summary:**
+
+| OTO | Downsell | DS Price |
+|-----|----------|----------|
+| OTO1 Unlimited Pro | Unlimited Pro Lite | $27 |
+| OTO2 Creative PRO (Gold) | Creative PRO Silver | $47 |
+| OTO3 DFY Pack | DS DFY Lite | $37 |
+| OTO4 Automation | DS Automation Lite | $27 |
+| OTO5 Traffic | DS Traffic Lite | $27 |
+| OTO6 Agency | DS Agency Lite | $67 |
+| OTO7 Reseller | DS Reseller Lite | $47 |
+| OTO8 Whitelabel | DS Whitelabel Lite | $97 |
+| OTO9 Enterprise | DS Enterprise Lite | $77 |
+| OTO10 VIP | DS VIP Lite | $47 |
 
 ---
 
@@ -61,38 +76,45 @@
 
 ---
 
-## OTO1 — Unlimited ($37)  ⭐ highest converter
+## OTO1 — Unlimited Pro ($47)  ⭐ highest converter
 
-**Promise:** Never worry about word limits again.
-
-**What's included:**
-- Unlimited (or very high, e.g. 2,000,000) monthly words
-- Access to the fastest/best model
-- Priority generation
-
-**Delivery:** "Unlimited" plan with huge `monthly_words`. Admin upgrades after purchase.
-
-**Why it sells:** Buyers fear running out. This is the #1 upsell in almost every funnel.
-
-**Downsell ($27):** "Unlimited Lite" — 200,000 words instead of unlimited.
-
----
-
-## OTO2 — Pro / Advanced AI ($47)
-
-**Promise:** Unlock ArgonMax's most powerful tools.
+**Promise:** Remove all word limits AND unlock ArgonMax's most powerful tools — in one upgrade.
 
 **What's included:**
+- Unlimited (or very high, e.g. 1,000,000–2,000,000) monthly words
+- Access to the fastest/best model + priority generation
 - Chat with Documents (upload PDF/DOCX, ask questions) — ArgonMax K3 long-context USP
 - Image understanding (upload a screenshot → get code/description) — ArgonMax Vision
 - Extra-long context mode
 - Advanced code tools (code review, refactor, tests)
 
-**Delivery:** `feature_pro = true` flag on plan; unlocks the extra modules in the UI.
+**Delivery:** "Unlimited Pro" plan with huge `monthly_words` + `feature_pro = true` flag. Admin upgrades after purchase.
 
-**Needs building:** PDF upload + parse, image upload to a vision model, feature-flag gating.
+**Why it sells:** Combines the #1 upsell (no limits) with the highest-value power features — one easy yes.
 
-**Downsell ($27):** Only Chat-with-PDF (not vision).
+**Downsell ($27):** "Unlimited Pro Lite" — 200,000 words + Chat-with-PDF only (no vision).
+
+---
+
+## OTO2 — Creative PRO ($87 Gold / $47 Silver DS)
+
+**Promise:** Add AI image + video creation to ArgonMax.
+
+**What's included:**
+- AI image generation (multiple aspect ratios)
+- 10-second AI video generation (720p)
+- Saved gallery
+- One-time credits (not monthly), separate from words
+
+**Tiers:**
+- 🥇 **Gold ($87)** — main OTO — 500 image + 50 video credits (one-time)
+- 🥈 **Silver ($47)** — downsell — 150 image + 25 video credits (one-time)
+
+**Delivery:** `feature_media = true` flag; consumables `image_credits` / `video_credits`. Video locked to 10s / 720p to keep cost predictable.
+
+**Needs building:** `REPLICATE_API_TOKEN` (+ model env). Set purchase URLs in Admin > Plans.
+
+**Downsell ($47):** Creative PRO Silver — 150 image + 25 video credits instead of Gold's 500/50.
 
 ---
 
@@ -241,15 +263,17 @@
 
 ---
 
-## Creative Studio (Image + Video) — added OTOs
+## Creative PRO (Image + Video) — now OTO2
+
+Moved into **OTO2 — Creative PRO** above. Gold ($87) is the main OTO, Silver ($47) is its downsell.
 
 AI image (gpt-image-2, low quality) + video (p-video, 10s/720p) via Replicate.
 Credits are **one-time** (not monthly), separate from words.
 
-| Plan | Price | Images | Videos | Your API cost (max) | Net after 60% cut |
-|------|-------|--------|--------|--------------------|-------------------|
-| Creative Studio Silver | $47 | 150 | 25 | ~$8 | ~$18.80 → profit ~$11 |
-| Creative Studio Gold | $87 | 500 | 50 | ~$20 | ~$34.80 → profit ~$15 |
+| Tier | Role | Price | Images | Videos | Your API cost (max) | Net after 60% cut |
+|------|------|-------|--------|--------|--------------------|-------------------|
+| Creative PRO Silver | DS | $47 | 150 | 25 | ~$8 | ~$18.80 → profit ~$11 |
+| Creative PRO Gold | main | $87 | 500 | 50 | ~$20 | ~$34.80 → profit ~$15 |
 
 - Gated by `feature_media`; consumables `image_credits` / `video_credits`.
 - Video locked to 10s / 720p to keep cost predictable.

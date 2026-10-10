@@ -9,55 +9,61 @@
 
 ---
 
-# OTO1 — Unlimited / Mega ($37)
+# OTO1 — Unlimited Pro ($47)  ⭐ highest converter
 
-**1. Wait Headline:** Wait — Your Account Has A Limit… Remove It Now For A One-Time Fee.
-**2. Sub-Headline:** Unlock a massive 1,000,000-word allowance so you never hit "you're out of credits" in the middle of a project again.
-**3. Congrats:** Smart move grabbing ArgonMax. But there's one thing standing between you and truly unlimited creation…
-**4. The 10x Idea:** The people who make real money with AI don't ration their usage — they create freely, test constantly, and scale. Limits kill momentum.
-**5. The Gap:** Your front-end account has a monthly word allowance. Great for testing — but if you plan to create seriously (or for clients), you'll want the brakes off.
-**6. Introducing:** **ArgonMax Unlimited** — a giant 1,000,000-word allowance plus priority processing, so you can create as much as you want.
-**7. What It Unlocks:** A huge word bank, fastest generation priority, and total peace of mind — create blogs, emails, code, and campaigns without watching a counter.
-**8. Benefit — Create Without Fear:** Never stop mid-project. Write the whole funnel, the whole email series, the whole content month in one sitting.
-**9. Benefit — Client-Ready Volume:** Enough capacity to serve real clients and real projects, not just dabble.
-**10. Benefit — Priority Speed:** Your requests jump the queue for faster results when it matters.
-**11. Who It's For:** Anyone who plans to use ArgonMax more than "once in a while" — marketers, agencies, sellers, and creators.
-**12. Life-With-It:** Open ArgonMax, create everything you need, close it — no math, no limits, no interruptions.
-**13. Benefit Bullets:** ✅ 1,000,000-word allowance ✅ Priority processing ✅ No mid-project cutoffs ✅ Perfect for client work ✅ One-time price.
-**14. Value Stack:** Comparable "unlimited" AI plans run $47+/month. You get it once.
-**15. Price Anchor:** That's $564/year elsewhere. Not today.
-**16. The Deal:** Unlock it now for a one-time **$37**.
+**1. Wait Headline:** Wait — Remove Your Limits AND Unlock ArgonMax's Most Powerful Tools, In One Move.
+**2. Sub-Headline:** Get a massive 1,000,000-word allowance PLUS Chat With Documents and AI Vision — the full power account, one-time fee.
+**3. Congrats:** Smart move grabbing ArgonMax. But there's one upgrade that turns it from "great" into "unstoppable"…
+**4. The 10x Idea:** The people who make real money with AI don't ration usage and don't settle for basic text — they create freely AND feed the AI their own documents, data, and images.
+**5. The Gap:** Your front-end account has a word limit, and it can't yet read your PDFs or "see" your images. Unlimited Pro removes both brakes at once.
+**6. Introducing:** **ArgonMax Unlimited Pro** — a giant 1,000,000-word allowance, priority processing, Chat With PDF, Image Vision, and advanced code tools, all together.
+**7. What It Unlocks:** A huge word bank, fastest generation priority, document chat, image understanding, long-context memory, and pro code tools.
+**8. Benefit — Create Without Fear:** Never stop mid-project. Write the whole funnel, email series, and content month in one sitting.
+**9. Benefit — Chat With Any Document:** Turn 100-page PDFs into instant answers. Contracts, research, ebooks — understood in seconds.
+**10. Benefit — AI That Sees + Pro Code Tools:** Upload a screenshot and get answers or code; review and refactor with specialist developer personas.
+**11. Who It's For:** Anyone serious about ArgonMax — marketers, agencies, developers, consultants, researchers.
+**12. Life-With-It:** Open ArgonMax, create everything, upload any file, ask anything — no limits, no missing features.
+**13. Benefit Bullets:** ✅ 1,000,000-word allowance ✅ Priority processing ✅ Chat with PDFs & docs ✅ AI image vision ✅ Advanced code tools ✅ One-time price.
+**14. Value Stack:** "Unlimited" AI plans run $47+/month and chat-with-PDF tools $20+/month — on their own. You get both, once.
+**15. Price Anchor:** That's $800+/year elsewhere. Not today.
+**16. The Deal:** Unlock it now for a one-time **$47**.
 **17. Guarantee:** Covered by the same 30-day money-back guarantee.
 **18. Scarcity:** This one-time upgrade price is only available right now, on this page. It won't be offered again at this price.
-**19. FAQ:** *Is it really one-time?* Yes. *Do words reset?* You get a large one-time allowance; top-ups available later. *Can I downgrade?* You keep what you bought.
-**20. Final CTA:** **[ Yes — Upgrade Me To Unlimited ($37) ]**  /  [ No thanks, I'll stay limited ]
-> **P.S.** Creating with a limit is like driving with the handbrake on. Take it off for $37 — once.
+**19. FAQ:** *Is it really one-time?* Yes. *Do words reset?* Large one-time allowance; top-ups available later. *What file types?* PDF & text today. *Does vision need setup?* No — built in.
+**20. Final CTA:** **[ Yes — Upgrade Me To Unlimited Pro ($47) ]**  /  [ No thanks, I'll stay limited ]
+> **P.S.** No limits AND no missing features — for one payment. Driving with the handbrake on is a choice. Take it off for $47, once.
+
+**Downsell ($27):** "Unlimited Pro Lite" — 200,000 words + Chat-with-PDF only (no vision).
 
 ---
 
-# OTO2 — Pro / Advanced AI ($47)
+# OTO2 — Creative PRO ($87 Gold / $47 Silver DS)
 
-**1. Wait Headline:** Before You Continue — Unlock ArgonMax's Most Powerful Tools.
-**2. Sub-Headline:** Add "Chat With Documents" and AI Image Analysis (Vision) to your account — the features power users love most.
-**3. Congrats:** You've got the core suite. Now let's give it superpowers.
-**4. The 10x Idea:** The biggest time-savings in AI come from feeding it YOUR content — your PDFs, your screenshots, your data — and letting it do the heavy analysis.
-**5. The Gap:** The front-end handles text and code beautifully. But it can't yet read your documents or "see" your images. Pro fixes that.
-**6. Introducing:** **ArgonMax Pro** — unlock Chat With PDF, Image Vision, and advanced code tools.
-**7. What It Unlocks:** Upload PDFs and ask questions, drop in a screenshot and get answers/code, and access deeper code review & refactoring.
-**8. Benefit — Chat With Any Document:** Turn 100-page PDFs into instant answers and summaries. Contracts, research, ebooks — understood in seconds.
-**9. Benefit — AI That Sees:** Upload an image or screenshot and ask about it — describe it, extract text, or turn a design into code.
-**10. Benefit — Pro Coding Tools:** Review, refactor, and document code with specialist personas built for developers.
-**11. Who It's For:** Consultants, students, developers, researchers, and anyone drowning in documents.
-**12. Life-With-It:** Stop reading 40-page reports. Upload, ask, done.
-**13. Benefit Bullets:** ✅ Chat with PDFs & docs ✅ AI image understanding ✅ Advanced code tools ✅ Long-context memory ✅ One-time price.
-**14. Value Stack:** Standalone "chat with PDF" tools charge $20+/month by themselves.
-**15. Price Anchor:** You'd pay that monthly elsewhere. Here it's once.
-**16. The Deal:** Add Pro now for a one-time **$47**.
-**17. Guarantee:** 30-day money-back guarantee applies.
-**18. Scarcity:** Only available on this page, at this price, right now.
-**19. FAQ:** *What file types?* PDF & text today. *Does vision need setup?* No — it's built in. *One-time?* Yes.
-**20. Final CTA:** **[ Yes — Add ArgonMax Pro ($47) ]**  /  [ No thanks ]
-> **P.S.** Your documents hold answers you're wasting hours digging for. Let Pro find them in seconds.
+**1. Wait Headline:** Add AI IMAGE & VIDEO Creation To ArgonMax.
+**2. Sub-Headline:** Generate scroll-stopping images and short videos from a text prompt — one-time credits, no monthly fees.
+**3. Congrats:** You can write and code. Now make visuals that stop the scroll.
+**4. The 10x Idea:** In 2026, content without visuals gets ignored. Images and video are the difference between skipped and shared.
+**5. The Gap:** The front-end focuses on text and code. Creative PRO adds pro image + video generation.
+**6. Introducing:** **ArgonMax Creative PRO** — AI image (multiple aspect ratios) and 10-second video generation, built in.
+**7. What It Unlocks:** Ad creatives, social images, thumbnails, and short promo videos — from a simple prompt.
+**8. Benefit — Images In Seconds:** Type it, pick a ratio, get a polished image ready to post.
+**9. Benefit — Short Videos On Demand:** Create eye-catching clips for reels, ads, and stories.
+**10. Benefit — Everything In One Place:** No separate image/video subscriptions to juggle.
+**11. Who It's For:** Marketers, e-commerce sellers, social creators, and agencies.
+**12. Life-With-It:** Write the ad, generate the image AND the video — all before lunch.
+**13. Benefit Bullets:** ✅ AI image generation ✅ 10-sec AI videos ✅ Multiple aspect ratios ✅ Saved gallery ✅ One-time credits.
+**14. Two Tiers:**
+> 🥇 **Gold ($87):** 500 image credits + 50 video credits (one-time) — best value, main offer.
+> 🥈 **Silver ($47):** 150 image credits + 25 video credits (one-time) — downsell.
+**15. Price Anchor:** Standalone image + video AI tools cost $30–$50/month each.
+**16. The Deal:** Grab Gold at **$87** (3x the credits) — or step down to Silver at **$47**.
+**17. Guarantee:** 30-day money-back guarantee.
+**18. Scarcity:** One-time credits at this launch price — this page only.
+**19. FAQ:** *Do credits reset?* They're a one-time allowance; top-ups later. *Where do files go?* Saved in your gallery. *Video length?* 10 seconds, 720p.
+**20. Final CTA:** **[ Yes — Add Creative PRO Gold ($87) ]**  /  [ No thanks ]
+> **P.S.** Words tell, visuals sell. Add images and video and watch your engagement climb.
+
+**Downsell ($47):** Creative PRO Silver — 150 image + 25 video credits instead of Gold's 500/50.
 
 ---
 
@@ -240,34 +246,6 @@
 **19. FAQ:** *How many seats?* Up to 10. *Do members get Pro tools?* Yes.
 **20. Final CTA:** **[ Yes — Upgrade To Enterprise ($127) ]**  /  [ No thanks ]
 > **P.S.** Your team is your leverage. Give them the best tool — once — and watch output soar.
-
----
-
-# OTO — Creative Studio (Silver $47 / Gold $87)
-
-**1. Wait Headline:** Add AI IMAGE & VIDEO Creation To ArgonMax.
-**2. Sub-Headline:** Generate scroll-stopping images and short videos from a text prompt — one-time credits, no monthly fees.
-**3. Congrats:** You can write and code. Now make visuals that stop the scroll.
-**4. The 10x Idea:** In 2026, content without visuals gets ignored. Images and video are the difference between skipped and shared.
-**5. The Gap:** The front-end focuses on text and code. Creative Studio adds pro image + video generation.
-**6. Introducing:** **ArgonMax Creative Studio** — AI image (multiple aspect ratios) and 10-second video generation, built in.
-**7. What It Unlocks:** Ad creatives, social images, thumbnails, and short promo videos — from a simple prompt.
-**8. Benefit — Images In Seconds:** Type it, pick a ratio, get a polished image ready to post.
-**9. Benefit — Short Videos On Demand:** Create eye-catching clips for reels, ads, and stories.
-**10. Benefit — Everything In One Place:** No separate image/video subscriptions to juggle.
-**11. Who It's For:** Marketers, e-commerce sellers, social creators, and agencies.
-**12. Life-With-It:** Write the ad, generate the image AND the video — all before lunch.
-**13. Benefit Bullets:** ✅ AI image generation ✅ 10-sec AI videos ✅ Multiple aspect ratios ✅ Saved gallery ✅ One-time credits.
-**14. Two Tiers:**
-> 🥈 **Silver ($47):** 150 image credits + 25 video credits (one-time).
-> 🥇 **Gold ($87):** 500 image credits + 50 video credits (one-time) — best value.
-**15. Price Anchor:** Standalone image + video AI tools cost $30–$50/month each.
-**16. The Deal:** Grab Silver at **$47** or upgrade to Gold at **$87** (3x the credits).
-**17. Guarantee:** 30-day money-back guarantee.
-**18. Scarcity:** One-time credits at this launch price — this page only.
-**19. FAQ:** *Do credits reset?* They're a one-time allowance; top-ups later. *Where do files go?* Saved in your gallery. *Video length?* 10 seconds, 720p.
-**20. Final CTA:** **[ Yes — Add Gold ($87) ]**  •  **[ Add Silver ($47) ]**  /  [ No thanks ]
-> **P.S.** Words tell, visuals sell. Add images and video and watch your engagement climb.
 
 ---
 

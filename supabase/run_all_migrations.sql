@@ -812,4 +812,29 @@ create policy "builds_admin_read" on public.builds
   for select using (public.is_admin());
 
 
+-- --------------------------------------------------------------
+-- 0022_funnel_merge.sql
+-- --------------------------------------------------------------
+-- OTO1 + OTO2 merged into "Unlimited Pro" ($47, DS $27);
+-- Creative Studio becomes OTO2 "Creative PRO" (Gold $87 main / Silver $47 DS).
+update public.plans
+   set name = 'OTO1 Unlimited Pro', price = 47, is_unlimited = true,
+       monthly_words = greatest(monthly_words, 1000000), feature_pro = true
+ where name = 'OTO1 Unlimited';
+
+update public.plans set is_active = false where name = 'OTO2 Pro';
+
+update public.plans
+   set name = 'DS Unlimited Pro Lite', price = 27, feature_pro = true
+ where name = 'DS Unlimited Lite';
+
+update public.plans
+   set name = 'OTO2 Creative PRO Gold', price = 87
+ where name = 'Creative Studio Gold';
+
+update public.plans
+   set name = 'DS Creative PRO Silver', price = 47
+ where name = 'Creative Studio Silver';
+
+
 commit;

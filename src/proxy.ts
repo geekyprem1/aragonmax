@@ -17,6 +17,7 @@ const PROTECTED = [
   "/team",
   "/branding",
   "/reseller",
+  "/bonuses",
 ];
 
 export async function proxy(request: NextRequest) {

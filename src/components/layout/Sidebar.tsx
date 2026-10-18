@@ -21,6 +21,7 @@ import {
   BookOpen,
   Settings,
   LogOut,
+  Gift,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -36,6 +37,7 @@ const userNav: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/build", label: "Build", icon: Hammer },
   { href: "/code", label: "Code Generator", icon: Code2 },
   { href: "/templates", label: "Templates", icon: LayoutGrid },
+  { href: "/bonuses", label: "Bonuses", icon: Gift },
 ];
 
 const adminNav: { href: string; label: string; icon: LucideIcon }[] = [
